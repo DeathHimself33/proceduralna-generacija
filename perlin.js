@@ -1,9 +1,13 @@
-function gradient(x, y, seed = 0) {
-  //Pseudo-random generisanje sa seedom
-  const n = (x * 92837111) ^ (y * 689287499) ^ (seed * 283923);
-  const h = (n << 13) ^ n;
-  return ((h * (h * h * 60493 + 19990303) + 1376312589) & 0x7FFFFFFF) % 8;
+const gradients = [
+  [1, 1], [-1, 1], [1, -1], [-1, -1],
+  [1, 0], [-1, 0], [0, 1], [0, -1]
+];
+function gradient(x, y) {
+  const hash = Math.sin(x * 12.9898 + y * 78.233) * 43758.5453;
+  const index = Math.floor(Math.abs(hash) % gradients.length);
+  return gradients[index];
 }
+// Pretvori [-1, 1] u [0, 255]
 
 function fade(x){
     comp1 = 6 * Math.pow(x,5);
@@ -28,15 +32,15 @@ function perlin_2d(x, y){
     dx = x - x0;
     dy = y - y0;
 
-    //Dot proizvodi
-    dot00 = gradient(x0,y0);
-    dot10 = gradient(x1,y0);
-    dot01 = gradient(x0,y1);
-    dot11 = gradient(x1,y1);
+    //Dot proizvodi sa vektorom udaljenosti
+    const dot00 = gradient(x0, y0)[0]*dx + gradient(x0, y0)[1]*dy;
+    const dot10 = gradient(x1, y0)[0]*(dx-1) + gradient(x1, y0)[1]*dy;
+    const dot01 = gradient(x0, y1)[0]*dx + gradient(x0, y1)[1]*(dy-1);
+    const dot11 = gradient(x1, y1)[0]*(dx-1) + gradient(x1, y1)[1]*(dy-1);
 
     u = fade(dx);
-    u = fade(dy);
-    a = lerp(dot00,dot01,u);
+    v = fade(dy);
+    a = lerp(dot00,dot10,u);
     b = lerp(dot01,dot11,u)
     return lerp(a,b,v) 
 }
@@ -45,10 +49,12 @@ function fractal_perlin(x,y,octaves = 6.0, persistence = 0.5, lacunarity = 2.0){
     total = 0;
     frequency = 1.0;
     amplitude = 1.0;
+    let maxValue = 0;
     for(i in Range(octaves)){
         total += perlin_2d(x * frequency, y * frequency) * amplitude;
         frequency *= lacunarity;
         amplitude *= persistence;
     }
-    return total;
+    return total / maxValue;
 }
+
