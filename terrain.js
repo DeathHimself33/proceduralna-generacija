@@ -3,10 +3,10 @@ export function generateHeightMap(width, height) {
     for (let z = 0; z < height; z++) {
         const row = [];
         for (let x = 0; x < width; x++) {
+            // Ravna podloga sa blagim brdašcima
             const wave = 0.1 * Math.sin(x * 0.3) * Math.cos(z * 0.3);
-            const bump = 0.15 * Math.exp(-((x - 30) ** 2 + (z - 30) ** 2) / 100);
-            const heightValue = wave + bump;
-            row.push(heightValue);
+            const bump = 0.15 * Math.exp(-((x - 30) ** 2 + (z - 30) ** 2) / 100); // jedno brdo u centru
+            row.push(wave + bump);
         }
         map.push(row);
     }
