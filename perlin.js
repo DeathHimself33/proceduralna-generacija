@@ -11,7 +11,7 @@ function gradient(x, y) {
 }
 
 function fade(t) {
-  return t * t * t * (t * (t * 6 - 15) + 10;
+  return t * t * t * (t * (t * 6 - 15) + 10);
 }
 
 function lerp(a, b, t) {
