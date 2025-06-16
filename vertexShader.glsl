@@ -1,13 +1,14 @@
 attribute vec3 aPosition;
-attribute vec2 aTexCoord;  // Added for texture support
+attribute vec2 aTexCoord;
 
+uniform mat4 uModelViewMatrix;
 uniform mat4 uProjectionMatrix;
 
-varying vec2 vTexCoord;    // Pass texture coordinates to fragment shader
-varying float vVerticalPos; // Pass vertical position for gradient
+varying vec2 vTexCoord;
+varying float vVerticalPos;
 
 void main() {
-    gl_Position = uProjectionMatrix * vec4(aPosition, 1.0);
+    gl_Position = uProjectionMatrix * uModelViewMatrix * vec4(aPosition, 1.0);
     vTexCoord = aTexCoord;
-    vVerticalPos = aPosition.y; // Assuming Y is the vertical axis
+    vVerticalPos = aPosition.y; // Pass Y position for layer coloring
 }
