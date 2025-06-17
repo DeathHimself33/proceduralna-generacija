@@ -1,6 +1,6 @@
 import { fractalPerlin } from './perlin.js';
 
-function generateHeightMap(size=1, scale = 4) { //size=najveci razmak izmedu planjine i dubine; scale=visina planina(idealno do 5)
+function generateHeightMap(size=1, scale = 20) { //size=najveci razmak izmedu planjine i dubine; scale=visina planina i broj(idealno do 5)
   const map = [];
   for (let z = 0; z < size; z++) {
     const row = [];
