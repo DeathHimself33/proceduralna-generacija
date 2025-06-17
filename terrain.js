@@ -1,5 +1,5 @@
 import { fractalPerlin } from './perlin.js';
-
+import maxHeight from './main.js';
 export function generateHeightMap(width, height, scale = 0.1) {
   const map = [];
   for (let z = 0; z < height; z++) {
