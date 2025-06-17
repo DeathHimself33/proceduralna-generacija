@@ -1,8 +1,20 @@
 import { fractalPerlin } from './perlin.js';
 
 // Global variables
-let terrainSize = 30;
-let terrainScale = 5;
+
+let scala;
+do {
+    scala = Math.floor(Math.random() * 9);
+} while (scala < 3);
+
+let sizet;
+do {
+    sizet = Math.floor(Math.random() * 100);
+} while (sizet < 20);
+
+
+let terrainSize =sizet;
+let terrainScale = scala;
 let positionBuffer, indexBuffer;
 let positions = [], indices = [];
 let gl, program;
@@ -55,16 +67,23 @@ const vsSource = `
 
 const fsSource = `
     precision mediump float;
-    varying float vVerticalPos;
-    uniform float uLayerThreshold;
-    void main() {
-        vec4 green = vec4(0.2, 0.7, 0.3, 1.0);
-        vec4 coffee = vec4(0.44, 0.31, 0.22, 1.0);
-        vec4 gray = vec4(0.5, 0.5, 0.5, 1.0);
-        if (vVerticalPos > uLayerThreshold) gl_FragColor = green;
-        else if (vVerticalPos > -uLayerThreshold) gl_FragColor = coffee;
-        else gl_FragColor = gray;
+
+varying float vVerticalPos;
+uniform float uLayerThreshold;
+
+void main() {
+    vec4 gray = vec4(0.2, 0.7, 0.3, 1.0);
+    vec4 coffee = vec4(0.44, 0.31, 0.22, 1.0);
+    vec4 green = vec4(0.5, 0.5, 0.5, 1.0);
+    
+    if (vVerticalPos > uLayerThreshold) {
+        gl_FragColor = gray;
+    } else if (vVerticalPos > -uLayerThreshold) {
+        gl_FragColor = coffee;
+    } else {
+        gl_FragColor = green;
     }
+}
 `;
 
 // Compile shader
