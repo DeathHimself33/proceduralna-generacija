@@ -1,16 +1,57 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="utf-8">
-  <title>3D Teren</title>
-  <style>
-    body { margin: 0; background: #000; }
-    canvas { display: block; margin: auto; background: #aee; }
-  </style>
+    <title>3D Terrain with WebGL</title>
+    <style>
+        body { margin: 0; overflow: hidden; }
+        .controls {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(255, 255, 255, 0.7);
+            padding: 10px;
+            border-radius: 5px;
+            font-family: Arial, sans-serif;
+            z-index: 100;
+        }
+        .controls div {
+            margin-bottom: 8px;
+        }
+        .controls label {
+            display: inline-block;
+            width: 100px;
+        }
+        .controls input[type="range"] {
+            width: 150px;
+            vertical-align: middle;
+        }
+        .controls span {
+            display: inline-block;
+            width: 40px;
+            text-align: right;
+            margin-left: 5px;
+        }
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+    </style>
 </head>
 <body>
-  <canvas id="canvas" width="800" height="600"></canvas>
-
-  <script type="module" src="main.js"></script>
+    <div class="controls">
+        <div>
+            <label for="sizeSlider">Terrain Size: </label>
+            <input type="range" id="sizeSlider" min="10" max="100" value="30" step="1">
+            <span id="sizeValue">30</span>
+        </div>
+        <div>
+            <label for="scaleSlider">Terrain Scale: </label>
+            <input type="range" id="scaleSlider" min="1" max="10" value="5" step="0.1">
+            <span id="scaleValue">5</span>
+        </div>
+    </div>
+    <canvas id="canvas"></canvas>
+    <script type="module" src="main.js"></script>
 </body>
 </html>
