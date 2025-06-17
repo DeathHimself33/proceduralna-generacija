@@ -1,19 +1,44 @@
 import { fractalPerlin } from './perlin.js';
 
-function generateHeightMap(size=1, scale = 5) { //size=najveci razmak izmedu planjine i dubine; scale=visina planina i broj(idealno do 5)
-  const map = [];
-  for (let z = 0; z < size; z++) {
-    const row = [];
-    for (let x = 0; x < size; x++) {
-      const nx = x/size - 0.5;
-      const nz = z/size - 0.5;
-      let elevation = fractalPerlin(nx * scale, nz * scale);
-      elevation = elevation * 4; // kontrolise visinu
-      row.push(elevation);
+// Global variables
+let terrainSize = 30;
+let terrainScale = 5;
+let positionBuffer, indexBuffer;
+let positions = [], indices = [];
+let gl, program;
+let uModelViewMatrix, uProjectionMatrix;
+let rotX = -0.6, rotY = 0, zoom = 25;
+
+// Initialize WebGL
+function initWebGL() {
+    const canvas = document.getElementById("canvas");
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    gl = canvas.getContext("webgl");
+    
+    if (!gl) {
+        alert("WebGL not supported in your browser!");
+        return null;
     }
-    map.push(row);
-  }
-  return map;
+    
+    return canvas;
+}
+
+// Generate height map
+function generateHeightMap() {
+    const map = [];
+    for (let z = 0; z < terrainSize; z++) {
+        const row = [];
+        for (let x = 0; x < terrainSize; x++) {
+            const nx = x/terrainSize - 0.5;
+            const nz = z/terrainSize - 0.5;
+            let elevation = fractalPerlin(nx * terrainScale, nz * terrainScale);
+            elevation = elevation * 4; // height multiplier
+            row.push(elevation);
+        }
+        map.push(row);
+    }
+    return map;
 }
 
 // Shader sources
@@ -73,11 +98,11 @@ function initShaders() {
     return program;
 }
 
-// Generate terrain mesh
-function createTerrainMesh(size = 20) {    //velicina terena x,y
-  const heightMap = generateHeightMap(size);
-  const positions = [];
-  const indices = [];
+// Create terrain mesh
+function createTerrainMesh() {
+    const heightMap = generateHeightMap();
+    positions = [];
+    indices = [];
 
     // Create vertices
     for (let z = 0; z < terrainSize; z++) {
