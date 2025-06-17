@@ -4,8 +4,15 @@ const gradients = [
 ];
 
 function gradient(x, y) {
+<<<<<<< HEAD
   const hash = Math.sin(x * 12.9898 + y * 78.233) * 43758.5453;
   return gradients[Math.floor(Math.abs(hash) % gradients.length)];
+=======
+  const seed = x * 374761393 + y * 668265263; // random big primes
+  const hash = (seed ^ (seed >> 13)) >>> 0;
+  const index = hash % gradients.length;
+  return gradients[index];
+>>>>>>> 87e880d9259851c8c724d74eb88ff8b9c35c82fa
 }
 
 function fade(t) {
