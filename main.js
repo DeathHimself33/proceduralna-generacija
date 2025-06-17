@@ -6,7 +6,8 @@ let terrainSize = 30;
 let terrainScale = 5;
 let noiseOctaves = 6;
 let noisePersistence = 0.5;
-let maxHeight = 5;  // add this global for max height slider
+let noiseLacunarity = 2.0;
+let maxHeight = 5;
 let positionBuffer, indexBuffer;
 let positions = [], indices = [];
 let gl, program;
@@ -35,8 +36,10 @@ function generateHeightMap() {
     const map = [];
     const noiseParams = {
         octaves: noiseOctaves,
-        persistence: noisePersistence
+        persistence: noisePersistence,
+        lacunarity: noiseLacunarity
     };
+
     
     for (let z = 0; z < terrainSize; z++) {
         const row = [];
@@ -190,6 +193,8 @@ function setupControls(canvas) {
     const heightSlider = document.getElementById('heightSlider');
     const heightValue = document.getElementById('heightValue');
     const randomSeedButton = document.getElementById('randomSeedButton');
+    const lacunaritySlider = document.getElementById('lacunaritySlider');
+    const lacunarityValue = document.getElementById('lacunarityValue');
 
     sizeSlider.addEventListener('input', function () {
         terrainSize = parseInt(this.value);
@@ -214,6 +219,11 @@ function setupControls(canvas) {
         persistenceValue.textContent = noisePersistence.toFixed(1);
         updateTerrain();
     });
+    lacunaritySlider.addEventListener('input', function() {
+        noiseLacunarity = parseFloat(this.value);
+        lacunarityValue.textContent = noiseLacunarity.toFixed(1);
+        updateTerrain();
+    });
 
     heightSlider.addEventListener('input', function () {
         maxHeight = parseFloat(this.value);
@@ -229,6 +239,7 @@ function setupControls(canvas) {
         noiseOctaves = 1 + Math.floor(Math.random() * 9);
         noisePersistence = 0.1 + Math.random() * 0.8;
         maxHeight = 1 + Math.random() * 19;
+        noiseLacunarity = 1 + Math.random() * 3;
 
         sizeSlider.value = terrainSize;
         sizeValue.textContent = terrainSize;
@@ -240,11 +251,13 @@ function setupControls(canvas) {
         persistenceValue.textContent = noisePersistence.toFixed(1);
         heightSlider.value = maxHeight;
         heightValue.textContent = maxHeight.toFixed(1);
+        lacunaritySlider.value = noiseLacunarity;
+        lacunarityValue.textContent = noiseLacunarity.toFixed(1);
 
         updateTerrain();
     });
     randomSeedButton.addEventListener('click', () => {
-        randomizeSeed();
+            randomizeSeed();
     });
 
 }
