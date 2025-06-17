@@ -37,7 +37,11 @@ export function perlin2D(x, y) {
   );
 }
 
-export function fractalPerlin(x, y, octaves = 6, persistence = 0.5) {
+// Modified to use parameters object
+export function fractalPerlin(x, y, params = {}) {
+  const octaves = params.octaves || 6;
+  const persistence = params.persistence || 0.5;
+  
   let total = 0;
   let frequency = 1;
   let amplitude = 1;

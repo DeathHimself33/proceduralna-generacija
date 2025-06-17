@@ -3,10 +3,12 @@ import { fractalPerlin } from './perlin.js';
 // Global variables
 let terrainSize = 30;
 let terrainScale = 5;
+let noiseOctaves = 6;
+let noisePersistence = 0.5;
 let positionBuffer, indexBuffer;
 let positions = [], indices = [];
 let gl, program;
-let uModelViewMatrix, uProjectionMatrix;
+let uModelViewMatrix, uProjectionMatrix, uLayerThreshold;
 let rotX = -0.6, rotY = 0, zoom = 25;
 
 // Initialize WebGL
@@ -21,18 +23,25 @@ function initWebGL() {
         return null;
     }
     
+    gl.enable(gl.DEPTH_TEST);
+    gl.clearColor(0.5, 0.8, 1.0, 1.0);
     return canvas;
 }
 
-// Generate height map
+// Generate height map with noise parameters
 function generateHeightMap() {
     const map = [];
+    const noiseParams = {
+        octaves: noiseOctaves,
+        persistence: noisePersistence
+    };
+    
     for (let z = 0; z < terrainSize; z++) {
         const row = [];
         for (let x = 0; x < terrainSize; x++) {
             const nx = x/terrainSize - 0.5;
             const nz = z/terrainSize - 0.5;
-            let elevation = fractalPerlin(nx * terrainScale, nz * terrainScale);
+            let elevation = fractalPerlin(nx * terrainScale, nz * terrainScale, noiseParams);
             elevation = elevation * 4; // height multiplier
             row.push(elevation);
         }
@@ -67,18 +76,6 @@ const fsSource = `
     }
 `;
 
-// Compile shader
-function compileShader(gl, source, type) {
-    const shader = gl.createShader(type);
-    gl.shaderSource(shader, source);
-    gl.compileShader(shader);
-    if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-        console.error("Shader error:", gl.getShaderInfoLog(shader));
-        return null;
-    }
-    return shader;
-}
-
 // Initialize shaders
 function initShaders() {
     const vertexShader = compileShader(gl, vsSource, gl.VERTEX_SHADER);
@@ -96,6 +93,17 @@ function initShaders() {
     
     gl.useProgram(program);
     return program;
+}
+
+function compileShader(gl, source, type) {
+    const shader = gl.createShader(type);
+    gl.shaderSource(shader, source);
+    gl.compileShader(shader);
+    if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+        console.error("Shader error:", gl.getShaderInfoLog(shader));
+        return null;
+    }
+    return shader;
 }
 
 // Create terrain mesh
@@ -135,15 +143,10 @@ function updateTerrain() {
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
     gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW);
     
-    // Rebind attributes
-    const aPosition = gl.getAttribLocation(program, "aPosition");
-    gl.enableVertexAttribArray(aPosition);
-    gl.vertexAttribPointer(aPosition, 3, gl.FLOAT, false, 0, 0);
-    
     draw();
 }
 
-// Setup camera controls
+// Setup controls
 function setupControls(canvas) {
     let isDragging = false;
     let lastX = 0, lastY = 0;
@@ -177,6 +180,10 @@ function setupControls(canvas) {
     const sizeValue = document.getElementById('sizeValue');
     const scaleSlider = document.getElementById('scaleSlider');
     const scaleValue = document.getElementById('scaleValue');
+    const octavesSlider = document.getElementById('octavesSlider');
+    const octavesValue = document.getElementById('octavesValue');
+    const persistenceSlider = document.getElementById('persistenceSlider');
+    const persistenceValue = document.getElementById('persistenceValue');
 
     sizeSlider.addEventListener('input', function() {
         terrainSize = parseInt(this.value);
@@ -187,6 +194,38 @@ function setupControls(canvas) {
     scaleSlider.addEventListener('input', function() {
         terrainScale = parseFloat(this.value);
         scaleValue.textContent = terrainScale.toFixed(1);
+        updateTerrain();
+    });
+
+    octavesSlider.addEventListener('input', function() {
+        noiseOctaves = parseInt(this.value);
+        octavesValue.textContent = noiseOctaves;
+        updateTerrain();
+    });
+
+    persistenceSlider.addEventListener('input', function() {
+        noisePersistence = parseFloat(this.value);
+        persistenceValue.textContent = noisePersistence.toFixed(1);
+        updateTerrain();
+    });
+
+    // Regenerate button
+    const regenerateButton = document.getElementById('regenerateButton');
+    regenerateButton.addEventListener('click', function() {
+        terrainSize = 10 + Math.floor(Math.random() * 40);
+        terrainScale = 1 + Math.random() * 9;
+        noiseOctaves = 1 + Math.floor(Math.random() * 9);
+        noisePersistence = 0.1 + Math.random() * 0.8;
+        
+        sizeSlider.value = terrainSize;
+        sizeValue.textContent = terrainSize;
+        scaleSlider.value = terrainScale;
+        scaleValue.textContent = terrainScale.toFixed(1);
+        octavesSlider.value = noiseOctaves;
+        octavesValue.textContent = noiseOctaves;
+        persistenceSlider.value = noisePersistence;
+        persistenceValue.textContent = noisePersistence.toFixed(1);
+        
         updateTerrain();
     });
 }
@@ -222,12 +261,14 @@ function getModelViewMatrix() {
 // Draw function
 function draw() {
     gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
-    gl.clearColor(0.5, 0.8, 1.0, 1.0);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-    gl.enable(gl.DEPTH_TEST);
 
     gl.uniformMatrix4fv(uProjectionMatrix, false, new Float32Array(getProjectionMatrix(gl.canvas)));
     gl.uniformMatrix4fv(uModelViewMatrix, false, new Float32Array(getModelViewMatrix()));
+
+    const aPosition = gl.getAttribLocation(program, "aPosition");
+    gl.enableVertexAttribArray(aPosition);
+    gl.vertexAttribPointer(aPosition, 3, gl.FLOAT, false, 0, 0);
 
     gl.drawElements(gl.TRIANGLES, indices.length, gl.UNSIGNED_SHORT, 0);
 }
@@ -243,7 +284,7 @@ function main() {
     // Get uniform locations
     uModelViewMatrix = gl.getUniformLocation(program, "uModelViewMatrix");
     uProjectionMatrix = gl.getUniformLocation(program, "uProjectionMatrix");
-    const uLayerThreshold = gl.getUniformLocation(program, "uLayerThreshold");
+    uLayerThreshold = gl.getUniformLocation(program, "uLayerThreshold");
     gl.uniform1f(uLayerThreshold, 0.33);
     
     // Create buffers
@@ -262,9 +303,6 @@ function main() {
         canvas.height = window.innerHeight;
         draw();
     });
-    
-    // Initial draw
-    draw();
 }
 
 main();
