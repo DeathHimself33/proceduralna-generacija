@@ -5,8 +5,9 @@ const gradients = [
 ];
 
 function gradient(x, y) {
-  const hash = Math.sin(x * 12.9898 + y * 78.233) * 43758.5453;
-  const index = Math.floor(Math.abs(hash) % gradients.length);
+  const seed = x * 374761393 + y * 668265263; // random big primes
+  const hash = (seed ^ (seed >> 13)) >>> 0;
+  const index = hash % gradients.length;
   return gradients[index];
 }
 
