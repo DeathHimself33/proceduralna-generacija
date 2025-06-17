@@ -5,6 +5,7 @@ let terrainSize = 30;
 let terrainScale = 5;
 let noiseOctaves = 6;
 let noisePersistence = 0.5;
+let maxHeight = 5;  // add this global for max height slider
 let positionBuffer, indexBuffer;
 let positions = [], indices = [];
 let gl, program;
@@ -39,10 +40,9 @@ function generateHeightMap() {
     for (let z = 0; z < terrainSize; z++) {
         const row = [];
         for (let x = 0; x < terrainSize; x++) {
-            const nx = x/terrainSize - 0.5;
-            const nz = z/terrainSize - 0.5;
+            const nx = x / terrainSize - 0.5;
+            const nz = z / terrainSize - 0.5;
             let elevation = fractalPerlin(nx * terrainScale, nz * terrainScale, noiseParams);
-            elevation = elevation * 4; // height multiplier
             row.push(elevation);
         }
         map.push(row);
@@ -115,13 +115,13 @@ function createTerrainMesh() {
     // Create vertices
     for (let z = 0; z < terrainSize; z++) {
         for (let x = 0; x < terrainSize; x++) {
-            positions.push(x - terrainSize/2, heightMap[z][x] * 5, z - terrainSize/2);
+            positions.push(x - terrainSize / 2, heightMap[z][x] * maxHeight, z - terrainSize / 2);
         }
     }
 
     // Create indices
-    for (let z = 0; z < terrainSize-1; z++) {
-        for (let x = 0; x < terrainSize-1; x++) {
+    for (let z = 0; z < terrainSize - 1; z++) {
+        for (let x = 0; x < terrainSize - 1; x++) {
             const i = z * terrainSize + x;
             indices.push(i, i + terrainSize, i + 1);
             indices.push(i + 1, i + terrainSize, i + terrainSize + 1);
@@ -133,16 +133,18 @@ function createTerrainMesh() {
 
 // Update terrain when parameters change
 function updateTerrain() {
-    const { positions, indices } = createTerrainMesh();
-    
+    const mesh = createTerrainMesh();
+    positions = mesh.positions;
+    indices = mesh.indices;
+
     // Update position buffer
     gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
-    
+
     // Update index buffer
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
     gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW);
-    
+
     draw();
 }
 
@@ -175,7 +177,7 @@ function setupControls(canvas) {
         draw();
     });
 
-    // Slider controls
+    // Sliders and values
     const sizeSlider = document.getElementById('sizeSlider');
     const sizeValue = document.getElementById('sizeValue');
     const scaleSlider = document.getElementById('scaleSlider');
@@ -184,39 +186,48 @@ function setupControls(canvas) {
     const octavesValue = document.getElementById('octavesValue');
     const persistenceSlider = document.getElementById('persistenceSlider');
     const persistenceValue = document.getElementById('persistenceValue');
+    const heightSlider = document.getElementById('heightSlider');
+    const heightValue = document.getElementById('heightValue');
 
-    sizeSlider.addEventListener('input', function() {
+    sizeSlider.addEventListener('input', function () {
         terrainSize = parseInt(this.value);
         sizeValue.textContent = terrainSize;
         updateTerrain();
     });
 
-    scaleSlider.addEventListener('input', function() {
+    scaleSlider.addEventListener('input', function () {
         terrainScale = parseFloat(this.value);
         scaleValue.textContent = terrainScale.toFixed(1);
         updateTerrain();
     });
 
-    octavesSlider.addEventListener('input', function() {
+    octavesSlider.addEventListener('input', function () {
         noiseOctaves = parseInt(this.value);
         octavesValue.textContent = noiseOctaves;
         updateTerrain();
     });
 
-    persistenceSlider.addEventListener('input', function() {
+    persistenceSlider.addEventListener('input', function () {
         noisePersistence = parseFloat(this.value);
         persistenceValue.textContent = noisePersistence.toFixed(1);
         updateTerrain();
     });
 
+    heightSlider.addEventListener('input', function () {
+        maxHeight = parseFloat(this.value);
+        heightValue.textContent = maxHeight.toFixed(1);
+        updateTerrain();
+    });
+
     // Regenerate button
     const regenerateButton = document.getElementById('regenerateButton');
-    regenerateButton.addEventListener('click', function() {
+    regenerateButton.addEventListener('click', function () {
         terrainSize = 10 + Math.floor(Math.random() * 40);
         terrainScale = 1 + Math.random() * 9;
         noiseOctaves = 1 + Math.floor(Math.random() * 9);
         noisePersistence = 0.1 + Math.random() * 0.8;
-        
+        maxHeight = 1 + Math.random() * 19;
+
         sizeSlider.value = terrainSize;
         sizeValue.textContent = terrainSize;
         scaleSlider.value = terrainScale;
@@ -225,23 +236,25 @@ function setupControls(canvas) {
         octavesValue.textContent = noiseOctaves;
         persistenceSlider.value = noisePersistence;
         persistenceValue.textContent = noisePersistence.toFixed(1);
-        
+        heightSlider.value = maxHeight;
+        heightValue.textContent = maxHeight.toFixed(1);
+
         updateTerrain();
     });
 }
 
 // Matrix calculations
 function getProjectionMatrix(canvas) {
-    const fov = Math.PI/4;
-    const aspect = canvas.width/canvas.height;
+    const fov = Math.PI / 4;
+    const aspect = canvas.width / canvas.height;
     const near = 0.1;
     const far = 100;
-    const f = 1/Math.tan(fov/2);
+    const f = 1 / Math.tan(fov / 2);
     return [
-        f/aspect, 0, 0, 0,
+        f / aspect, 0, 0, 0,
         0, f, 0, 0,
-        0, 0, (far+near)/(near-far), -1,
-        0, 0, 2*far*near/(near-far), 0
+        0, 0, (far + near) / (near - far), -1,
+        0, 0, (2 * far * near) / (near - far), 0
     ];
 }
 
@@ -251,9 +264,9 @@ function getModelViewMatrix() {
     const cosY = Math.cos(rotY);
     const sinY = Math.sin(rotY);
     return [
-        cosY, sinX*sinY, cosX*sinY, 0,
+        cosY, sinX * sinY, cosX * sinY, 0,
         0, cosX, -sinX, 0,
-        -sinY, sinX*cosY, cosX*cosY, 0,
+        -sinY, sinX * cosY, cosX * cosY, 0,
         0, -5, -zoom, 1
     ];
 }
@@ -268,7 +281,10 @@ function draw() {
 
     const aPosition = gl.getAttribLocation(program, "aPosition");
     gl.enableVertexAttribArray(aPosition);
+    gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
     gl.vertexAttribPointer(aPosition, 3, gl.FLOAT, false, 0, 0);
+
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
 
     gl.drawElements(gl.TRIANGLES, indices.length, gl.UNSIGNED_SHORT, 0);
 }
@@ -277,26 +293,26 @@ function draw() {
 function main() {
     const canvas = initWebGL();
     if (!canvas) return;
-    
+
     program = initShaders();
     if (!program) return;
-    
+
     // Get uniform locations
     uModelViewMatrix = gl.getUniformLocation(program, "uModelViewMatrix");
     uProjectionMatrix = gl.getUniformLocation(program, "uProjectionMatrix");
     uLayerThreshold = gl.getUniformLocation(program, "uLayerThreshold");
     gl.uniform1f(uLayerThreshold, 0.33);
-    
+
     // Create buffers
     positionBuffer = gl.createBuffer();
     indexBuffer = gl.createBuffer();
-    
+
     // Initial terrain generation
     updateTerrain();
-    
+
     // Setup controls
     setupControls(canvas);
-    
+
     // Handle window resize
     window.addEventListener('resize', () => {
         canvas.width = window.innerWidth;
