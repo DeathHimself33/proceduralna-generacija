@@ -1,4 +1,3 @@
-// Improved Perlin noise implementation
 const gradients = [
   [1, 1], [-1, 1], [1, -1], [-1, -1],
   [1, 0], [-1, 0], [0, 1], [0, -1]
@@ -6,8 +5,7 @@ const gradients = [
 
 function gradient(x, y) {
   const hash = Math.sin(x * 12.9898 + y * 78.233) * 43758.5453;
-  const index = Math.floor(Math.abs(hash) % gradients.length);
-  return gradients[index];
+  return gradients[Math.floor(Math.abs(hash) % gradients.length)];
 }
 
 function fade(t) {
@@ -32,13 +30,10 @@ export function perlin2D(x, y) {
   const dot01 = gradient(x0, y1)[0] * dx + gradient(x0, y1)[1] * (dy - 1);
   const dot11 = gradient(x1, y1)[0] * (dx - 1) + gradient(x1, y1)[1] * (dy - 1);
 
-  const u = fade(dx);
-  const v = fade(dy);
-  
   return lerp(
-    lerp(dot00, dot10, u),
-    lerp(dot01, dot11, u),
-    v
+    lerp(dot00, dot10, fade(dx)),
+    lerp(dot01, dot11, fade(dx)),
+    fade(dy)
   );
 }
 
