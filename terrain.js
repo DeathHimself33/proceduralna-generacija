@@ -9,9 +9,6 @@ export function generateHeightMap(width, height, scale = 0.1) {
       const nx = x / width - 0.5;
       const nz = z / height - 0.5;
       let elevation = fractalPerlin(nx * scale, nz * scale);
-      
-      // Scale to -1..1 range
-      elevation = elevation * 2 - 1;
       row.push(elevation);
     }
     map.push(row);
