@@ -1,11 +1,20 @@
+let seed = Math.random() * 10000;
+
 const gradients = [
   [1, 1], [-1, 1], [1, -1], [-1, -1],
   [1, 0], [-1, 0], [0, 1], [0, -1]
 ];
 
+function seededHash(x, y) {
+  // Use seed to modify hash, simple hash function with seed
+  const s = seed;
+  const hash = Math.sin(x * 12.9898 + y * 78.233 + s) * 43758.5453;
+  return Math.abs(hash);
+}
+
 function gradient(x, y) {
-  const hash = Math.sin(x * 12.9898 + y * 78.233) * 43758.5453;
-  return gradients[Math.floor(Math.abs(hash) % gradients.length)];
+  const hash = seededHash(x, y);
+  return gradients[Math.floor(hash) % gradients.length];
 }
 
 function fade(t) {
@@ -37,11 +46,10 @@ export function perlin2D(x, y) {
   );
 }
 
-// Modified to use parameters object
 export function fractalPerlin(x, y, params = {}) {
   const octaves = params.octaves || 6;
   const persistence = params.persistence || 0.5;
-  
+
   let total = 0;
   let frequency = 1;
   let amplitude = 1;
@@ -55,4 +63,9 @@ export function fractalPerlin(x, y, params = {}) {
   }
 
   return total / maxValue;
+}
+
+// Function to set the seed from outside
+export function setSeed(newSeed) {
+  seed = newSeed;
 }

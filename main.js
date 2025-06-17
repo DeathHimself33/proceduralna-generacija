@@ -1,4 +1,5 @@
-import { fractalPerlin } from './perlin.js';
+import { fractalPerlin, setSeed } from './perlin.js';
+
 
 // Global variables
 let terrainSize = 30;
@@ -188,6 +189,7 @@ function setupControls(canvas) {
     const persistenceValue = document.getElementById('persistenceValue');
     const heightSlider = document.getElementById('heightSlider');
     const heightValue = document.getElementById('heightValue');
+    const randomSeedButton = document.getElementById('randomSeedButton');
 
     sizeSlider.addEventListener('input', function () {
         terrainSize = parseInt(this.value);
@@ -241,6 +243,16 @@ function setupControls(canvas) {
 
         updateTerrain();
     });
+    randomSeedButton.addEventListener('click', () => {
+        randomizeSeed();
+    });
+
+}
+//Randomize button
+function randomizeSeed() {
+    const newSeed = Math.random() * 10000;
+    setSeed(newSeed);
+    updateTerrain();
 }
 
 // Matrix calculations
