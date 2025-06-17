@@ -1,6 +1,6 @@
 import { fractalPerlin } from './perlin.js';
 
-function generateHeightMap(size=1, scale = 20) { //size=najveci razmak izmedu planjine i dubine; scale=visina planina i broj(idealno do 5)
+function generateHeightMap(size=1, scale = 5) { //size=najveci razmak izmedu planjine i dubine; scale=visina planina i broj(idealno do 5)
   const map = [];
   for (let z = 0; z < size; z++) {
     const row = [];
@@ -72,7 +72,7 @@ function initGL() {
 }
 
 // Generate terrain mesh
-function createTerrainMesh(size = 30) {    //velicina terena x,y
+function createTerrainMesh(size = 20) {    //velicina terena x,y
   const heightMap = generateHeightMap(size);
   const positions = [];
   const indices = [];
